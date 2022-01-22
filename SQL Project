@@ -1,0 +1,119 @@
+CREATE TABLE olt (
+    localitati VARCHAR(50),
+    populatie INT,
+    sex VARCHAR(1)
+);
+
+SELECT * FROM olt;
+
+LOAD DATA  INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\OLT.csv'
+INTO TABLE olt
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '' 
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+# TOTAL POPULATIE
+SELECT localitati, SUM(populatie) 
+FROM olt
+GROUP BY localitati
+ORDER BY SUM(populatie) DESC;
+
+#POPULATIA MASCULINA
+SELECT localitati, SUM(populatie) 
+FROM olt
+WHERE sex = 'M' 
+GROUP BY localitati
+ORDER BY SUM(populatie) DESC;
+
+#POPULATIA FEMININA
+SELECT localitati, SUM(populatie) 
+FROM olt
+WHERE sex = 'F' 
+GROUP BY localitati
+ORDER BY SUM(populatie) DESC;
+
+# CREARE TABEL POPULATIA TOTALA
+CREATE TABLE pop_tot (
+    localitati VARCHAR(40),
+    populatia_totala INT
+);
+
+LOAD DATA  INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\Total populatie.csv'
+INTO TABLE pop_tot
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '' 
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+SELECT * FROM pop_tot;
+
+# CREARE TABEL POPULATIA MASCULINA
+CREATE TABLE pop_m (
+    localitati VARCHAR(40),
+    populatia_masculina INT
+);
+
+LOAD DATA  INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\Pop_mas.csv'
+INTO TABLE pop_m
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '' 
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+SELECT * FROM pop_m;
+
+#CREARE TABEL POPULATIA FEMININA
+CREATE TABLE pop_f (
+    localitati VARCHAR(40),
+    populatia_feminina INT
+);
+
+LOAD DATA  INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\Pop_fem.csv'
+INTO TABLE pop_f
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '' 
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+SELECT * FROM pop_f;
+
+# CREARE VARIABILA TIP LOCALITATE
+ALTER TABLE pop_tot
+ADD tip_localitate VARCHAR(10);
+
+UPDATE pop_tot
+SET tip_localitate = 'Oras'
+WHERE populatia_totala > 4000;
+
+UPDATE pop_tot
+SET tip_localitate = 'Comuna'
+WHERE populatia_totala <4000;
+
+UPDATE pop_tot
+SET tip_localitate = 'Judet'
+WHERE populatia_totala > 100000;
+
+
+#TRIPLU JOIN
+SELECT pop_tot.localitati, pop_tot.tip_localitate, pop_tot.populatia_totala, pop_m.populatia_masculina, pop_f.populatia_feminina 
+FROM pop_tot
+LEFT JOIN pop_m
+ON pop_tot.localitati = pop_m.localitati
+LEFT JOIN pop_f
+ON pop_tot.localitati = pop_f.localitati;
+
+DELETE FROM pop_tot
+LEFT JOIN pop_m
+ON pop_tot.localitati = pop_m.localitati
+LEFT JOIN pop_f
+ON pop_tot.localitati = pop_f.localitati
+WHERE pop_tot.localitati = 'TOTAL';
+
+SELECT pop_tot.localitati, pop_tot.populatia_totala
+FROM pop_tot
+LEFT JOIN pop_m
+ON pop_tot.localitati = pop_m.localitati
+LEFT JOIN pop_f
+ON pop_tot.localitati = pop_f.localitati
+WHERE pop_tot.populatia_totala > 4000;
